@@ -34,4 +34,19 @@ You can also use the provided `bootfuzz.img` in this repository as a precompiled
 ## Bugs
 If you find bugs using this fuzzer I would appreciate a shout out or a link back to this project.  
 
+## Crashing Test Case
 I have seen repeatable crashes in QEMU and VirtualBox already, but I do not have the time or interest in triaging them.  I'm more interested in getting it running on physical hardware.
+
+Here is a crashing test case discovered by this fuzzer.  Will crash QEMU and VirtualBox:
+
+```
+org 0x7c00
+
+start:
+    mov dx, 0x03ff
+    in ax, dx
+
+times 510-($-$$) db 0
+db 0x55, 0xaa 
+```
+
