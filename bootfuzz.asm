@@ -44,28 +44,31 @@ start:
     cmp al, 0x32
     je fuzz_out
     
-    ; set INT13 operation mode to disk read (0x2)
-    mov ah, 0x2
-    
     ; check if user entered "3" (ASCII - 0x33)
     cmp al, 0x33
+    je fuzz_read
+
+fuzz_read:    
+    ; set INT13 operation mode to disk read (0x2)
+    mov bx, 0x2
+    push bx
     je fuzz_int13
-    
-    ; set INT13 operation mode to disk write
-    mov ah, 0x3
     
     ; check if user entered "4" (ASCII - 0x34)
     cmp al, 0x34
+    jne reboot
+
+fuzz_write:
+    ; set INT13 operation mode to disk write
+    mov bx, 0x3
+    push bx
     je fuzz_int13
     
     ; if the user enters anything else, reboot
+reboot:
     int 0x19
 
 fuzz_in:
-    ; print "IN"
-    mov bx, in_str
-    call print_string
-fuzz_in_begin:
     ; print '\r'
     mov al, 0xd
     call print_letter
@@ -73,6 +76,10 @@ fuzz_in_begin:
     ; print '\n'
     mov al, 0xa
     call print_letter
+
+    ; print "IN"
+    mov bx, in_str
+    call print_string
     
     ; put random value in ax
     call get_random
@@ -126,13 +133,9 @@ fuzz_in_begin:
     in ax, dx
     
     ; loop forever
-    jmp fuzz_in_begin
+    jmp fuzz_in
 
 fuzz_out:
-    ; print to console "OUT"
-    mov bx, out_str
-    call print_string
-fuzz_out_begin:
     ; print to console '\r'
     mov al, 0xd
     call print_letter
@@ -140,6 +143,10 @@ fuzz_out_begin:
     ; print to console '\n'
     mov al, 0xa
     call print_letter
+
+    ; print to console "OUT"
+    mov bx, out_str
+    call print_string
     
     ; get first random value that will eventually
     ; be used as the 'dest' operand to 'out'
@@ -195,17 +202,10 @@ fuzz_out_begin:
     out dx, ax
     
     ; loop forever
-    jmp fuzz_out_begin
+    jmp fuzz_out
 
 fuzz_int13:
-    ; print int string
-    mov bx, int_str
-    call print_string
-    
-    ; save ah argument for later
-    ; ah is passed in to determine read or write
-    mov bh, ah
-fuzz_int13_begin:
+
     ; print '\r'
     mov al, 0xd
     call print_letter
@@ -214,6 +214,33 @@ fuzz_int13_begin:
     mov al, 0xa
     call print_letter
 
+    ; pop the read/write type into bh.
+    pop bx
+
+    cmp bx, 0x2
+    ; check if we are 'reading' or 'writing'
+    ; and print out the proper string.
+   
+    je print_read
+
+print_write:
+    push bx
+
+    ; print 'write' string
+    mov bx, write_str
+    call print_string
+
+    ; skip 'print_read' logic
+    jmp continue_disk_fuzz
+
+print_read:
+    push bx
+
+    ; print 'read'
+    mov bx, read_str
+    call print_string
+
+continue_disk_fuzz:
     ; get first random value
     call get_random
     mov dx, ax
@@ -257,15 +284,24 @@ fuzz_int13_begin:
     ; for int13 invocation
     mov cx, ax
 
-    ; copy int13 argument into ah to determine 
-    ; read or write
-    mov ah, bh
+    ; restoring dx to first random value
+    pop dx
+
+    ; copy read/write arg into ah
+    pop bx
+
+    ; moving BIOS Service type (read/write) to 'ah'
+    ; which is a parameter to the BIOS Service.
+    mov ah, bl
+
+    ; save bx for next iteration
+    push bx
 
     ; invoke the BIOS service (int13)
     int 0x13
 
     ; loop forever
-    jmp fuzz_int13_begin
+    jmp fuzz_int13
 
 ; relies on BIOS Services timer to create
 ; 'random' values returned in ax.
@@ -366,21 +402,24 @@ hex_str:
 
 banner_str:
     db "Bootfuzz By Nick Starke (https://github.com/nstarke)", 0xa, 0xd, 0xa
-    db "Select a Target:", 0xa, 0xd
+    db "Select Target:", 0xa, 0xd
     db "1) IN", 0xa, 0xd
     db "2) OUT", 0xa, 0xd
-    db "3) INT13 (Read)", 0xa, 0xd
-    db "4) INT13 (Write)", 0xa, 0xd, 0xa
-    db "Enter a Number 1-4", 0xa, 0xd, 0x0
+    db "3) Read", 0xa, 0xd
+    db "4) Write", 0xa, 0xd, 0xa
+    db "Enter 1-4", 0xa, 0xd, 0x0
 
 in_str:
-    db "In: ", 0xa, 0xd, 0x0
+    db "In:", 0x0
 
 out_str:
-    db "Out: ", 0xa, 0xd, 0x0
+    db "Out:", 0x0
 
-int_str:
-    db "Interrupt: ", 0xa, 0xd, 0x0
+read_str:
+    db "Read:", 0x0
+
+write_str:
+    db "Write:", 0x0
 
 times 510-($-$$) db 0
 db 0x55,0xaa 
