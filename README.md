@@ -31,10 +31,10 @@ In VirtualBox, you will need to add a "Floppy" controller in the VM settings and
 ## Precompiled
 You can also use the provided `bootfuzz.img` in this repository as a precompiled mbr for fuzzing.
 
-## Crashing Test Case
-I have seen repeatable crashes in QEMU and VirtualBox already, but I do not have the time or interest in triaging them.  I'm more interested in getting it running on physical hardware.
+## Crashing Test Cases
+I have seen repeatable crashes in QEMU, VirtualBox, and VMWare Workstation Player already, but I do not have the time or interest in triaging them.  I'm more interested in getting it running on physical hardware.
 
-Here is a crashing test case discovered by this fuzzer.  Will crash QEMU and VirtualBox:
+Crashing testcase 1: QEMU and VirtualBox
 
 * `QEMU emulator version 8.0.4 (Debian 1:8.0.4+dfsg-1ubuntu3.23.10.3)`
 * `VirtualBox Version 7.0.14 r161095`
@@ -50,7 +50,7 @@ times 510-($-$$) db 0
 db 0x55, 0xaa 
 ```
 
-Another crashing testcase in VMWare Player:
+Crashing Testcase 2: VMWare Player
 
 * `VMWare Workstation Player Version 17.5.1 build-23298084`
 
@@ -61,6 +61,22 @@ start:
     mov dx, 0x04ba
     mov ax, 0x00a8
     out dx, ax
+
+times 510-($-$$) db 0
+db 0x55, 0xaa 
+```
+
+Crashing Testcase 3: VMWare Player
+
+* `VMWare Workstation Player Version 17.5.1 build-23298084`
+
+```
+org 0x7c00
+
+start:
+    mov ax, 0x163e
+    mov dx, 0x043e
+    in ax, dx
 
 times 510-($-$$) db 0
 db 0x55, 0xaa 
