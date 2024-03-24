@@ -4,6 +4,11 @@
 
 A small fuzzer written to test motherboards / system BIOS for MBR-based hosts
 
+## What does this test?
+This fuzzer will test Port IO using the x86 `IN` and `OUT` instructions. It uses a BIOS Service Timer to generate random word values and then supply those random word values as operands to the `IN` and `OUT` instructions.  
+
+There are also testing modes for BIOS Services provided by INT 0x13 - specifically disk read/write.
+
 ## Contributing
 If you are able to run this on actual hardware, please open an issue and let us know your system specs and your results.
 
