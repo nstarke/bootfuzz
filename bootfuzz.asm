@@ -82,17 +82,32 @@ fuzz_in_begin:
     ; also so it can be printed to console
     mov dx, ax
     call print_hex
+
+    ; save dx for later to be used with 'in'
+    push dx
+
+    ; create second random value
+    call get_random
+
+    ; move second random value into cx
+    mov cx, ax
     
-    ; put random value in ax.  This will be used as 
-    ; the 'dest' operand for IN later.
+    ; put third random value in ax.  This will be used as 
+    ; the 'dest' operand for IN later, after multiplying by cx.
     call get_random
     
+    ; multiply ax and cx.  This is to 'spread' the operand values 
+    ; for 'in'.  since the BIOS service timer is deterministic, 
+    ; it will always produce values that are proximate.  
+    ; multiplying helps redistribute the operand values.
+    mul cx
+
+    ; take multiplied value and save it on the stack for later
+    push ax
+
     ; move random value into dx so it can be hex 
     ; printed out to console.
     mov dx, ax
-    
-    ; save ax for later
-    push ax
     
     ; print out '-' (dash) character
     mov al, 0x2d
@@ -101,10 +116,13 @@ fuzz_in_begin:
     ; prints out second random value
     call print_hex
     
-    ; restore ax so we can pass it to in
-    pop ax
+    ; restore ax so we can pass it to 'in'
+    pop ax    
+
+    ; restore dx so we can pass it to 'in'
+    pop dx
     
-    ; perform the test by executing IN
+    ; perform the test by executing 'in'
     in ax, dx
     
     ; loop forever
@@ -124,38 +142,56 @@ fuzz_out_begin:
     call print_letter
     
     ; get first random value that will eventually
-    ; be used as the 'dest' operand to OUT
+    ; be used as the 'dest' operand to 'out'
     call get_random
     
     ; move first random value into dx so it will be
-    ; the 'dest operand to OUT
+    ; the 'dest operand to 'out'
     mov dx, ax
     
     ; print first random value
     call print_hex
-    
+
+    ; save first random value for later. will be 
+    ; pop'd into dx before executing 'in'
+    push dx
+ 
     ; get second random value
     call get_random
-    
-    ; save second random value for later
+
+    ; move second random value into cx.
+    mov cx, ax
+
+    ; get third random value
+    call get_random
+
+    ; multiply second and third random values to 
+    ; redistribute operand ranges.
+    mul cx
+
+    ; save multiplied random value for later
     push ax
     
-    ; move second random value into dx
+    ; move muliplied random value into dx for printing
     mov dx, ax
-    
+
     ; print '-' (dash) character to delimit two random
     ; values
     mov al, 0x2d
-    call print_letter
+    call print_letter 
     
     ; print second random value currently stored in dx
     call print_hex
     
     ; restore ax so it can be used as 'src' operand to 
-    ; OUT
+    ; 'out' instruction.
     pop ax
+
+    ; restore dx so it can be used as the 'dest' operand
+    ; to the 'out' instruction
+    pop dx
     
-    ; execute out instruction
+    ; execute 'out' instruction
     out dx, ax
     
     ; loop forever
@@ -174,19 +210,32 @@ fuzz_int13_begin:
     mov al, 0xd
     call print_letter
 
-    ; 'print '\n'
+    ; print '\n'
     mov al, 0xa
     call print_letter
 
-    ; 'get first random value'
+    ; get first random value
     call get_random
     mov dx, ax
 
-    ; 'print first random value'.
+    ; save first random value for later
+    push dx
+
+    ; print first random value.
     call print_hex
 
-    ; generate second random value
+   ; get second random value
     call get_random
+
+    ; move second random value into cx.
+    mov cx, ax
+
+    ; get third random value
+    call get_random
+
+    ; multiply second and third random values to 
+    ; redistribute operand ranges.
+    mul cx
 
     ; save second random value for later
     push ax
