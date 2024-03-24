@@ -27,3 +27,6 @@ qemu-system-i386 -fda boot.img -nographic -accel kvm
 ```
 
 In VirtualBox, you will need to add a "Floppy" controller in the VM settings and then add a floppy drive.  After the floppy drive is created, you can point it at `boot.img` and then boot up.
+
+## Precompiled
+You can also use the provided `boot.img` in this repository as a precompiled mbr for fuzzing.
