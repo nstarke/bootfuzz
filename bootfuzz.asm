@@ -6,10 +6,23 @@
 ; assemble with `nasm -f bin -o bootfuzz.img bootfuzz.asm`
 ; run in qemu: `qemu-system-i386 -fda bootfuzz.img -nographic -accel kvm`
 
+[bits 16]
+
 ; MBR boot sector address
 org 0x7c00
 
 start:
+
+    ; vga video mode bios settings
+    mov al, 0x2
+    mov ah, 0x12
+    int 0x10
+
+    ; vga video memory map
+    mov ax, 0xb800
+    mov ds, ax
+    mov es, ax
+    
     ; set up code segment
     push cs
     
