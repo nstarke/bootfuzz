@@ -32,6 +32,6 @@ In VirtualBox, you will need to add a "Floppy" controller in the VM settings and
 You can also use the provided `boot.img` in this repository as a precompiled mbr for fuzzing.
 
 ## Bugs
-If you find bugs using this fuzzer I would appreciate a shout out of a link back to this project.  
+If you find bugs using this fuzzer I would appreciate a shout out or a link back to this project.  
 
 I have seen repeatable crashes in QEMU and VirtualBox already, but I do not have the time or interest in triaging them.  I'm more interested in getting it running on physical hardware.
