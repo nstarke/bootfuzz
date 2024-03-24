@@ -13,23 +13,23 @@ There are also testing modes for BIOS Services provided by `int 0x13` - specific
 If you are able to run this on actual hardware, please open an issue and let us know your system specs and your results.
 
 ## Assembling
-You can assemble `fuzz.asm` with NASM thusly:
+You can assemble `bootfuzz.asm` with NASM thusly:
 
 ```
-nasm -f bin -o boot.img fuzz.asm
+nasm -f bin -o bootfuzz.img bootfuzz.asm
 ```
 
 ## Running
-After you have assembled the fuzzer into `boot.img`, you can run the fuzzer in qemu thusly:
+After you have assembled the fuzzer into `bootfuzz.img`, you can run the fuzzer in qemu thusly:
 
 ```
-qemu-system-i386 -fda boot.img -nographic -accel kvm
+qemu-system-i386 -fda bootfuzz.img -nographic -accel kvm
 ```
 
-In VirtualBox, you will need to add a "Floppy" controller in the VM settings and then add a floppy drive.  After the floppy drive is created, you can point it at `boot.img` and then boot up.
+In VirtualBox, you will need to add a "Floppy" controller in the VM settings and then add a floppy drive.  After the floppy drive is created, you can point it at `bootfuzz.img` and then boot up.
 
 ## Precompiled
-You can also use the provided `boot.img` in this repository as a precompiled mbr for fuzzing.
+You can also use the provided `bootfuzz.img` in this repository as a precompiled mbr for fuzzing.
 
 ## Bugs
 If you find bugs using this fuzzer I would appreciate a shout out or a link back to this project.  

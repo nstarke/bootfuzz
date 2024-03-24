@@ -3,8 +3,8 @@
 ; Copyright (c) 2024 Nicholas Starke
 ; https://github.com/nstarke/bootfuzz
 ;
-; assemble with `nasm -f bin -o boot.img fuzz.asm`
-; run in qemu: `qemu-system-i386 -fda boot.img -nographic -accel kvm`
+; assemble with `nasm -f bin -o bootfuzz.img bootfuzz.asm`
+; run in qemu: `qemu-system-i386 -fda bootfuzz.img -nographic -accel kvm`
 
 ; MBR boot sector address
 org 0x7c00
