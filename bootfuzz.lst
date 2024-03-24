@@ -1,0 +1,350 @@
+     1                                  ; BOOTFUZZ
+     2                                  ; 
+     3                                  ; Copyright (c) 2024 Nicholas Starke
+     4                                  ; https://github.com/nstarke/bootfuzz
+     5                                  ;
+     6                                  ; assemble with `nasm -f bin -o bootfuzz.img bootfuzz.asm`
+     7                                  ; run in qemu: `qemu-system-i386 -fda bootfuzz.img -nographic -accel kvm`
+     8                                  
+     9                                  [bits 16]
+    10                                  
+    11                                  ; MBR boot sector address
+    12                                  org 0x7c00
+    13                                  
+    14                                  start:
+    15                                  
+    16                                      ; vga video mode bios settings
+    17 00000000 B002                        mov al, 0x2
+    18 00000002 B412                        mov ah, 0x12
+    19 00000004 CD10                        int 0x10
+    20                                  
+    21                                      ; vga video memory map
+    22 00000006 B800B8                      mov ax, 0xb800
+    23 00000009 8ED8                        mov ds, ax
+    24 0000000B 8EC0                        mov es, ax
+    25                                      
+    26                                      ; set up code segment
+    27 0000000D 0E                          push cs
+    28                                      
+    29                                      ; set up stack
+    30 0000000E 1F                          pop ds
+    31                                      
+    32                                      ; print banner / options
+    33 0000000F BB[2C01]                    mov bx, banner_str
+    34 00000012 E8BD00                      call print_string
+    35                                      
+    36                                      ; read user selection
+    37 00000015 E8FE00                      call read_keyboard
+    38                                      
+    39                                      ; check if user entered "1" (ASCII - 0x31)
+    40 00000018 3C31                        cmp al, 0x31
+    41 0000001A 7412                        je fuzz_in
+    42                                      
+    43                                      ; check if user entered "2" (ASCII - 0x32)
+    44 0000001C 3C32                        cmp al, 0x32
+    45 0000001E 7438                        je fuzz_out
+    46                                      
+    47                                      ; set INT13 operation mode to disk read (0x2)
+    48 00000020 B402                        mov ah, 0x2
+    49                                      
+    50                                      ; check if user entered "3" (ASCII - 0x33)
+    51 00000022 3C33                        cmp al, 0x33
+    52 00000024 745C                        je fuzz_int13
+    53                                      
+    54                                      ; set INT13 operation mode to disk write
+    55 00000026 B403                        mov ah, 0x3
+    56                                      
+    57                                      ; check if user entered "4" (ASCII - 0x34)
+    58 00000028 3C34                        cmp al, 0x34
+    59 0000002A 7456                        je fuzz_int13
+    60                                      
+    61                                      ; if the user enters anything else, reboot
+    62 0000002C CD19                        int 0x19
+    63                                  
+    64                                  fuzz_in:
+    65                                      ; print "IN"
+    66 0000002E BB[BD01]                    mov bx, in_str
+    67 00000031 E89E00                      call print_string
+    68                                  fuzz_in_begin:
+    69                                      ; print '\r'
+    70 00000034 B00D                        mov al, 0xd
+    71 00000036 E88F00                      call print_letter
+    72                                      
+    73                                      ; print '\n'
+    74 00000039 B00A                        mov al, 0xa
+    75 0000003B E88A00                      call print_letter
+    76                                      
+    77                                      ; put random value in ax
+    78 0000003E E87200                      call get_random
+    79                                      
+    80                                      ; copy first random value into dx so it can be 
+    81                                      ; supplied to IN later as the 'src' operand.
+    82                                      ; also so it can be printed to console
+    83 00000041 89C2                        mov dx, ax
+    84 00000043 E89D00                      call print_hex
+    85                                      
+    86                                      ; put random value in ax.  This will be used as 
+    87                                      ; the 'dest' operand for IN later.
+    88 00000046 E86A00                      call get_random
+    89                                      
+    90                                      ; move random value into dx so it can be hex 
+    91                                      ; printed out to console.
+    92 00000049 89C2                        mov dx, ax
+    93                                      
+    94                                      ; save ax for later
+    95 0000004B 50                          push ax
+    96                                      
+    97                                      ; print out '-' (dash) character
+    98 0000004C B02D                        mov al, 0x2d
+    99 0000004E E87700                      call print_letter
+   100                                      
+   101                                      ; prints out second random value
+   102 00000051 E88F00                      call print_hex
+   103                                      
+   104                                      ; restore ax so we can pass it to in
+   105 00000054 58                          pop ax
+   106                                      
+   107                                      ; perform the test by executing IN
+   108 00000055 ED                          in ax, dx
+   109                                      
+   110                                      ; loop forever
+   111 00000056 EBDC                        jmp fuzz_in_begin
+   112                                  
+   113                                  fuzz_out:
+   114                                      ; print to console "OUT"
+   115 00000058 BB[C401]                    mov bx, out_str
+   116 0000005B E87400                      call print_string
+   117                                  fuzz_out_begin:
+   118                                      ; print to console '\r'
+   119 0000005E B00D                        mov al, 0xd
+   120 00000060 E86500                      call print_letter
+   121                                      
+   122                                      ; print to console '\n'
+   123 00000063 B00A                        mov al, 0xa
+   124 00000065 E86000                      call print_letter
+   125                                      
+   126                                      ; get first random value that will eventually
+   127                                      ; be used as the 'dest' operand to OUT
+   128 00000068 E84800                      call get_random
+   129                                      
+   130                                      ; move first random value into dx so it will be
+   131                                      ; the 'dest operand to OUT
+   132 0000006B 89C2                        mov dx, ax
+   133                                      
+   134                                      ; print first random value
+   135 0000006D E87300                      call print_hex
+   136                                      
+   137                                      ; get second random value
+   138 00000070 E84000                      call get_random
+   139                                      
+   140                                      ; save second random value for later
+   141 00000073 50                          push ax
+   142                                      
+   143                                      ; move second random value into dx
+   144 00000074 89C2                        mov dx, ax
+   145                                      
+   146                                      ; print '-' (dash) character to delimit two random
+   147                                      ; values
+   148 00000076 B02D                        mov al, 0x2d
+   149 00000078 E84D00                      call print_letter
+   150                                      
+   151                                      ; print second random value currently stored in dx
+   152 0000007B E86500                      call print_hex
+   153                                      
+   154                                      ; restore ax so it can be used as 'src' operand to 
+   155                                      ; OUT
+   156 0000007E 58                          pop ax
+   157                                      
+   158                                      ; execute out instruction
+   159 0000007F EF                          out dx, ax
+   160                                      
+   161                                      ; loop forever
+   162 00000080 EBDC                        jmp fuzz_out_begin
+   163                                  
+   164                                  fuzz_int13:
+   165                                      ; print int string
+   166 00000082 BB[CC01]                    mov bx, int_str
+   167 00000085 E84A00                      call print_string
+   168                                      
+   169                                      ; save ah argument for later
+   170                                      ; ah is passed in to determine read or write
+   171 00000088 88E7                        mov bh, ah
+   172                                  fuzz_int13_begin:
+   173                                      ; print '\r'
+   174 0000008A B00D                        mov al, 0xd
+   175 0000008C E83900                      call print_letter
+   176                                  
+   177                                      ; 'print '\n'
+   178 0000008F B00A                        mov al, 0xa
+   179 00000091 E83400                      call print_letter
+   180                                  
+   181                                      ; 'get first random value'
+   182 00000094 E81C00                      call get_random
+   183 00000097 89C2                        mov dx, ax
+   184                                  
+   185                                      ; 'print first random value'.
+   186 00000099 E84700                      call print_hex
+   187                                  
+   188                                      ; generate second random value
+   189 0000009C E81400                      call get_random
+   190                                  
+   191                                      ; save second random value for later
+   192 0000009F 50                          push ax
+   193                                  
+   194                                      ; move second random value into dx for printing
+   195 000000A0 89C2                        mov dx, ax
+   196                                  
+   197                                      ; print '-' (dash) character to console
+   198 000000A2 B02D                        mov al, 0x2d
+   199 000000A4 E82100                      call print_letter
+   200                                  
+   201                                      ; print second random hex value
+   202 000000A7 E83900                      call print_hex
+   203                                  
+   204                                      ; restore second random value
+   205 000000AA 58                          pop ax
+   206                                  
+   207                                      ; copy second random value into cx as arguments
+   208                                      ; for int13 invocation
+   209 000000AB 89C1                        mov cx, ax
+   210                                  
+   211                                      ; copy int13 argument into ah to determine 
+   212                                      ; read or write
+   213 000000AD 88FC                        mov ah, bh
+   214                                  
+   215                                      ; invoke the BIOS service (int13)
+   216 000000AF CD13                        int 0x13
+   217                                  
+   218                                      ; loop forever
+   219 000000B1 EBD7                        jmp fuzz_int13_begin
+   220                                  
+   221                                  ; relies on BIOS Services timer to create
+   222                                  ; 'random' values returned in ax.
+   223                                  get_random:
+   224 000000B3 53                          push bx
+   225 000000B4 51                          push cx
+   226 000000B5 52                          push dx
+   227 000000B6 56                          push si
+   228 000000B7 57                          push di
+   229 000000B8 31C0                        xor ax, ax
+   230 000000BA E440                        in al, (0x40)
+   231 000000BC B102                        mov cl, 2
+   232 000000BE 88C4                        mov ah, al
+   233 000000C0 E440                        in al, (0x40)
+   234 000000C2 5B                          pop bx
+   235 000000C3 59                          pop cx
+   236 000000C4 5A                          pop dx
+   237 000000C5 5E                          pop si
+   238 000000C6 5F                          pop di
+   239 000000C7 C3                          ret
+   240                                  
+   241                                  ; Utility functions that aren't very interesting
+   242                                  ; Collected from:
+   243                                  ; * https://stackoverflow.com/questions/27636985/printing-hex-from-dx-with-nasm
+   244                                  ; * https://github.com/nanochess/book8088
+   245                                  print_letter:
+   246 000000C8 60                          pusha
+   247 000000C9 B40E                        mov ah, 0xe
+   248 000000CB BB0F00                      mov bx, 0xf
+   249 000000CE CD10                        int 0x10
+   250 000000D0 61                          popa
+   251 000000D1 C3                          ret
+   252                                  
+   253                                  print_string:
+   254 000000D2 60                          pusha
+   255                                  print_string_begin:
+   256 000000D3 8A07                        mov al, [bx]
+   257 000000D5 84C0                        test al, al
+   258 000000D7 7408                        je print_string_end
+   259 000000D9 53                          push bx
+   260 000000DA E8EBFF                      call print_letter
+   261 000000DD 5B                          pop bx
+   262 000000DE 43                          inc bx
+   263 000000DF EBF2                        jmp print_string_begin
+   264                                  print_string_end:
+   265 000000E1 61                          popa
+   266 000000E2 C3                          ret
+   267                                  
+   268                                  print_hex:
+   269 000000E3 60                          pusha
+   270 000000E4 BE[2701]                    mov si, hex_str + 2
+   271 000000E7 B90000                      mov cx, 0
+   272                                  
+   273                                  next_character:
+   274 000000EA 41                          inc cx
+   275 000000EB 89D3                        mov bx, dx
+   276 000000ED 81E300F0                    and bx, 0xf000
+   277 000000F1 C1EB04                      shr bx, 4
+   278 000000F4 80C730                      add bh, 0x30
+   279 000000F7 80FF39                      cmp bh, 0x39
+   280 000000FA 7F15                        jg add_7
+   281                                  
+   282                                  add_character_hex:
+   283 000000FC 883C                        mov [si], bh
+   284 000000FE 46                          inc si
+   285 000000FF C1E204                      shl dx, 4
+   286 00000102 83F904                      cmp cx, 4
+   287 00000105 75E3                        jnz next_character
+   288 00000107 EB00                        jmp _done
+   289                                  
+   290                                  _done:
+   291 00000109 BB[2501]                    mov bx, hex_str
+   292 0000010C E8C3FF                      call print_string
+   293 0000010F 61                          popa
+   294 00000110 C3                          ret
+   295                                  
+   296                                  add_7:
+   297 00000111 80C707                      add bh, 0x7
+   298 00000114 EBE6                        jmp add_character_hex
+   299                                  
+   300                                  read_keyboard:
+   301 00000116 53                          push bx
+   302 00000117 51                          push cx
+   303 00000118 52                          push dx
+   304 00000119 56                          push si
+   305 0000011A 57                          push di
+   306 0000011B B400                        mov ah, 0x0
+   307 0000011D CD16                        int 0x16
+   308 0000011F 5B                          pop bx
+   309 00000120 59                          pop cx
+   310 00000121 5A                          pop dx
+   311 00000122 5E                          pop si
+   312 00000123 5F                          pop di
+   313 00000124 C3                          ret
+   314                                      
+   315                                  hex_str:
+   316 00000125 30783030303000              db '0x0000', 0x0
+   317                                  
+   318                                  banner_str:
+   319 0000012C 426F6F7466757A7A20-         db "Bootfuzz By Nick Starke (https://github.com/nstarke)", 0xa, 0xd, 0xa
+   319 00000135 4279204E69636B2053-
+   319 0000013E 7461726B6520286874-
+   319 00000147 7470733A2F2F676974-
+   319 00000150 6875622E636F6D2F6E-
+   319 00000159 737461726B65290A0D-
+   319 00000162 0A                 
+   320 00000163 53656C656374206120-         db "Select a Target:", 0xa, 0xd
+   320 0000016C 5461726765743A0A0D 
+   321 00000175 312920494E0A0D              db "1) IN", 0xa, 0xd
+   322 0000017C 3229204F55540A0D            db "2) OUT", 0xa, 0xd
+   323 00000184 332920494E54313320-         db "3) INT13 (Read)", 0xa, 0xd
+   323 0000018D 2852656164290A0D   
+   324 00000195 342920494E54313320-         db "4) INT13 (Write)", 0xa, 0xd, 0xa
+   324 0000019E 285772697465290A0D-
+   324 000001A7 0A                 
+   325 000001A8 456E7465722061204E-         db "Enter a Number 1-4", 0xa, 0xd, 0x0
+   325 000001B1 756D62657220312D34-
+   325 000001BA 0A0D00             
+   326                                  
+   327                                  in_str:
+   328 000001BD 496E3A200A0D00              db "In: ", 0xa, 0xd, 0x0
+   329                                  
+   330                                  out_str:
+   331 000001C4 4F75743A200A0D00            db "Out: ", 0xa, 0xd, 0x0
+   332                                  
+   333                                  int_str:
+   334 000001CC 496E74657272757074-         db "Interrupt: ", 0xa, 0xd, 0x0
+   334 000001D5 3A200A0D00         
+   335                                  
+   336 000001DA 00<rep 24h>             times 510-($-$$) db 0
+   337 000001FE 55AA                    db 0x55,0xaa 
