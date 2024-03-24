@@ -39,6 +39,9 @@ I have seen repeatable crashes in QEMU and VirtualBox already, but I do not have
 
 Here is a crashing test case discovered by this fuzzer.  Will crash QEMU and VirtualBox:
 
+* `QEMU emulator version 8.0.4 (Debian 1:8.0.4+dfsg-1ubuntu3.23.10.3)`
+* `VirtualBox Version 7.0.14 r161095`
+
 ```
 org 0x7c00
 
