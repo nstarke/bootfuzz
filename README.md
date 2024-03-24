@@ -50,5 +50,21 @@ times 510-($-$$) db 0
 db 0x55, 0xaa 
 ```
 
+Another crashing testcase in VMWare Player:
+
+* `VMWare Workstation Player Version 17.5.1 build-23298084`
+
+```
+org 0x7c00
+
+start:
+    mov dx, 0x04ba
+    mov ax, 0x00a8
+    out dx, ax
+
+times 510-($-$$) db 0
+db 0x55, 0xaa 
+```
+
 ## Bugs
 If you find bugs using this fuzzer I would appreciate a shout out or a link back to this project.  
