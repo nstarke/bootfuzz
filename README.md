@@ -21,7 +21,7 @@ nasm -f bin -o bootfuzz.img bootfuzz.asm
 
 ## Running
 
-![https://img.youtube.com/vi/_j66cVXjqEk/0.jpg](https://www.youtube.com/watch?v=_j66cVXjqEk "Bootfuzz Running on Physical Hardware")
+[!["Bootfuzz Running on Physical Hardware"](https://img.youtube.com/vi/_j66cVXjqEk/0.jpg)](https://www.youtube.com/watch?v=_j66cVXjqEk "Bootfuzz Running on Physical Hardware")
 
 _Bootfuzz running on physical hardware_
 
