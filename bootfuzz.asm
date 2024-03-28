@@ -316,11 +316,11 @@ get_random:
     mov cl, 2
     mov ah, al
     in al, (0x40)
-    pop bx
-    pop cx
-    pop dx
-    pop si
     pop di
+    pop si
+    pop dx
+    pop cx
+    pop bx
     ret
 
 ; Utility functions that aren't very interesting
@@ -390,11 +390,11 @@ read_keyboard:
     push di
     mov ah, 0x0
     int 0x16
-    pop bx
-    pop cx
-    pop dx
-    pop si
     pop di
+    pop si
+    pop dx
+    pop cx
+    pop bx
     ret
     
 hex_str:

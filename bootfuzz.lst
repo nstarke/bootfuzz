@@ -316,11 +316,11 @@
    316 000000EF B102                        mov cl, 2
    317 000000F1 88C4                        mov ah, al
    318 000000F3 E440                        in al, (0x40)
-   319 000000F5 5B                          pop bx
-   320 000000F6 59                          pop cx
+   319 000000F5 5F                          pop di
+   320 000000F6 5E                          pop si
    321 000000F7 5A                          pop dx
-   322 000000F8 5E                          pop si
-   323 000000F9 5F                          pop di
+   322 000000F8 59                          pop cx
+   323 000000F9 5B                          pop bx
    324 000000FA C3                          ret
    325                                  
    326                                  ; Utility functions that aren't very interesting
@@ -390,11 +390,11 @@
    390 0000014D 57                          push di
    391 0000014E B400                        mov ah, 0x0
    392 00000150 CD16                        int 0x16
-   393 00000152 5B                          pop bx
-   394 00000153 59                          pop cx
+   393 00000152 5F                          pop di
+   394 00000153 5E                          pop si
    395 00000154 5A                          pop dx
-   396 00000155 5E                          pop si
-   397 00000156 5F                          pop di
+   396 00000155 59                          pop cx
+   397 00000156 5B                          pop bx
    398 00000157 C3                          ret
    399                                      
    400                                  hex_str:
