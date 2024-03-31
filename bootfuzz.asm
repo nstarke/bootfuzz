@@ -12,17 +12,18 @@
 org 0x7c00
 
 start:
-
-    ; vga video mode bios settings
-    mov al, 0x2
-    mov ah, 0x12
+     ; vga video mode bios settings
+    mov ah, 0x0
+    mov al, 0x12 ; mov al, 0x2 for 'text mode'
+                 ; mov al, 0x12 for 'vga mode'
     int 0x10
 
     ; vga video memory map
-    mov ax, 0xb800
+    mov ax, 0xb000 ; mov al, 0xb000 (or 0xb800) for 'text mode'
+                   ; mov al, 0xa000 for 'vga mode'
     mov ds, ax
     mov es, ax
-    
+
     ; set up code segment
     push cs
     
