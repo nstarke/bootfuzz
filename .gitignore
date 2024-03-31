@@ -1,3 +1,5 @@
-poc.img
-poc.asm
+poc*.img
+poc*.asm
 hardware.*
+.gdb_history
+.DS_Store
