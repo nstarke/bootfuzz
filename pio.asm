@@ -38,8 +38,7 @@ start:
     mov bx, after
     call print_string
 reboot:
-    hlt
-
+    int 0x19
 
 print_letter:
     pusha
