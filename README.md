@@ -95,6 +95,6 @@ Here is a list of instructions that will cause problems at least with QEMU:
 
 ```
 mov ax, (Any 16bit word)
-mov dx, 0x0cfe
+mov dx, 0x0cfe ; 0x03fb
 out dx, ax
 ```
