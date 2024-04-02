@@ -14,7 +14,7 @@ org 0x7c00
 start:
      ; vga video mode bios settings
     mov ah, 0x0
-    mov al, 0x12 ; mov al, 0x2 for 'text mode'
+    mov al, 0x2 ; mov al, 0x2 for 'text mode'
                  ; mov al, 0x12 for 'vga mode'
     int 0x10
 

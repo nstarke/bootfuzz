@@ -19,7 +19,7 @@
     19 00000004 CD10                        int 0x10
     20                                  
     21                                      ; vga video memory map
-    22 00000006 B800B0                      mov ax, 0xb000 ; mov al, 0xb800 for 'text mode'
+    22 00000006 B800B0                      mov ax, 0xb000 ; mov al, 0xb000 (or 0xb800) for 'text mode'
     23                                                     ; mov al, 0xa000 for 'vga mode'
     24 00000009 8ED8                        mov ds, ax
     25 0000000B 8EC0                        mov es, ax
