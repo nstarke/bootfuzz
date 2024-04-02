@@ -94,7 +94,7 @@ If you find bugs using this fuzzer I would appreciate a shout out or a link back
 Here is a list of instructions that will cause problems at least with QEMU:
 
 ```
-mov ax, (Any 16bit word)
+mov ax, 0x9090 (Any 16bit word)
 mov dx, 0x0cfe ; 0x03fb
 out dx, ax
 ```
