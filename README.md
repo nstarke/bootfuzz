@@ -89,3 +89,12 @@ db 0x55, 0xaa
 
 ## Bugs
 If you find bugs using this fuzzer I would appreciate a shout out or a link back to this project.  
+
+### Qemu
+Here is a list of instructions that will cause problems at least with QEMU:
+
+```
+mov ax, (Any 16bit word)
+mov dx, 0x0cfe
+out dx, ax
+```

@@ -3,3 +3,5 @@ poc*.asm
 hardware.*
 .gdb_history
 .DS_Store
+*.test.img
+*.test.asm
