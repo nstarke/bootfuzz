@@ -1,3 +1,5 @@
+#!/usr/bin/env python3
+
 import argparse, subprocess, datetime
 
 def run_test(insn, ax, dx):
